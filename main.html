@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Gerar XML</title>
+  <script>
+    function escapeXml(unsafe) {
+      return unsafe.replace(/[<>&'"]/g, function (c) {
+        switch (c) {
+          case '<': return '&lt;';
+          case '>': return '&gt;';
+          case '&': return '&amp;';
+          case '\'': return '&apos;';
+          case '"': return '&quot;';
+          default: return c;
+        }
+      });
+    }
+
+    function generateXML() {
+      const loja = escapeXml(document.getElementById('loja').value);
+      const linkLoja = escapeXml(document.getElementById('linkLoja').value);
+      const descricaoLoja = escapeXml(document.getElementById('descricaoLoja').value);
+
+      let items = '';
+      document.querySelectorAll('.item').forEach(item => {
+        const nomeProduto = escapeXml(item.querySelector('.nomeProduto').value);
+        const linkProduto = escapeXml(item.querySelector('.linkProduto').value);
+        const descricaoProduto = escapeXml(item.querySelector('.descricaoProduto').value);
+        const idProduto = escapeXml(item.querySelector('.idProduto').value);
+        const condicaoProduto = escapeXml(item.querySelector('.condicaoProduto').value);
+        const precoProduto = escapeXml(item.querySelector('.precoProduto').value);
+        const precoVendaProduto = escapeXml(item.querySelector('.precoVendaProduto').value);
+        const quantidadeProduto = escapeXml(item.querySelector('.quantidadeProduto').value);
+        const imagemProduto = escapeXml(item.querySelector('.imagemProduto').value);
+        const gtinProduto = escapeXml(item.querySelector('.gtinProduto').value);
+        const marcaProduto = escapeXml(item.querySelector('.marcaProduto').value);
+        const mpnProduto = escapeXml(item.querySelector('.mpnProduto').value);
+        const tipoProduto = escapeXml(item.querySelector('.tipoProduto').value);
+        const categoriaProduto = escapeXml(item.querySelector('.categoriaProduto').value);
+        const idCategoriaProduto = escapeXml(item.querySelector('.idCategoriaProduto').value);
+        const disponibilidadeProduto = escapeXml(item.querySelector('.disponibilidadeProduto').value);
+        const parcelasProduto = escapeXml(item.querySelector('.parcelasProduto').value);
+        const valorParcelasProduto = escapeXml(item.querySelector('.valorParcelasProduto').value);
+        const etiquetaProduto = escapeXml(item.querySelector('.etiquetaProduto').value);
+
+        items += `
+          <item>
+            <title><![CDATA[${nomeProduto}]]></title>
+            <link>${linkProduto}</link>
+            <description><![CDATA[${descricaoProduto}]]></description>
+            <g:image_link>${imagemProduto}</g:image_link>
+        `;
+
+        if (idProduto) items += `<g:id>${idProduto}</g:id>`;
+        if (condicaoProduto) items += `<g:condition>${condicaoProduto}</g:condition>`;
+        if (precoProduto) items += `<g:price>${precoProduto}</g:price>`;
+        if (precoVendaProduto) items += `<g:sale_price>${precoVendaProduto}</g:sale_price>`;
+        if (quantidadeProduto) items += `<g:quantity>${quantidadeProduto}</g:quantity>`;
+        if (gtinProduto) items += `<g:gtin><![CDATA[${gtinProduto}]]></g:gtin>`;
+        if (marcaProduto) items += `<g:brand>${marcaProduto}</g:brand>`;
+        if (mpnProduto) items += `<g:mpn>${mpnProduto}</g:mpn>`;
+        if (tipoProduto) items += `<g:product_type><![CDATA[${tipoProduto}]]></g:product_type>`;
+        if (categoriaProduto) items += `<g:google_product_category><![CDATA[${categoriaProduto}]]></g:google_product_category>`;
+        if (idCategoriaProduto) items += `<g:item_group_id>${idCategoriaProduto}</g:item_group_id>`;
+        if (disponibilidadeProduto) items += `<g:availability>${disponibilidadeProduto}</g:availability>`;
+        if (parcelasProduto && valorParcelasProduto) {
+          items += `
+            <g:installment>
+              <g:months>${parcelasProduto}</g:months>
+              <g:amount>${valorParcelasProduto}</g:amount>
+            </g:installment>
+          `;
+        }
+        if (etiquetaProduto) items += `<g:custom_label_2>${etiquetaProduto}</g:custom_label_2>`;
+
+        items += `</item>`;
+      });
+
+      const xml = `
+        <rss xmlns:g="http://base.google.com/ns/1.0" version="2.0">
+          <channel>
+            <title><![CDATA[${loja}]]></title>
+            <link>${linkLoja}</link>
+            <description>${descricaoLoja}</description>
+            ${items}
+          </channel>
+        </rss>
+      `;
+
+      const blob = new Blob([xml], { type: 'application/xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'feed.xml';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function addItem() {
+      const itemTemplate = `
+        <div class="item">
+          <h3>Produto</h3>
+          <label>Nome do Produto (Obrigatório): <input type="text" class="nomeProduto" required></label><br>
+          <label>URL do Produto (Obrigatório): <input type="text" class="linkProduto" required></label><br>
+          <label>Descrição do Produto (Obrigatório): <textarea class="descricaoProduto" required></textarea></label><br>
+          <label>ID do Produto: <input type="text" class="idProduto"></label><br>
+          <label>Condição: <input type="text" class="condicaoProduto"></label><br>
+          <label>Preço: <input type="text" class="precoProduto"></label><br>
+          <label>Preço de Venda: <input type="text" class="precoVendaProduto"></label><br>
+          <label>Quantidade: <input type="text" class="quantidadeProduto"></label><br>
+          <label>URL da Imagem do Produto (Obrigatório): <input type="text" class="imagemProduto" required></label><br>
+          <label>GTIN: <input type="text" class="gtinProduto"></label><br>
+          <label>Marca: <input type="text" class="marcaProduto"></label><br>
+          <label>MPN: <input type="text" class="mpnProduto"></label><br>
+          <label>Tipo do Produto: <input type="text" class="tipoProduto"></label><br>
+          <label>Categoria do Produto: <input type="text" class="categoriaProduto"></label><br>
+          <label>ID da Categoria do Produto: <input type="text" class="idCategoriaProduto"></label><br>
+          <label>Disponibilidade: <input type="text" class="disponibilidadeProduto"></label><br>
+          <label>Meses de Parcelamento: <input type="text" class="parcelasProduto"></label><br>
+          <label>Valor das Parcelas: <input type="text" class="valorParcelasProduto"></label><br>
+          <label>Etiqueta Personalizada: <input type="text" class="etiquetaProduto"></label><br>
+          <button type="button" onclick="removeItem(this)">Remover Produto</button>
+          <hr>
+        </div>
+      `;
+      const itemContainer = document.getElementById('items');
+      itemContainer.insertAdjacentHTML('beforeend', itemTemplate);
+    }
+
+    function removeItem(button) {
+      const item = button.parentNode;
+      item.remove();
+    }
+  </script>
+</head>
+<body>
+  <h1>Gerar XML de Produtos</h1>
+  <form onsubmit="event.preventDefault(); generateXML();">
+    <label>Nome da Loja: <input type="text" id="loja" required></label><br>
+    <label>URL da Loja: <input type="text" id="linkLoja" required></label><br>
+    <label>Descrição da Loja: <textarea id="descricaoLoja"></textarea></label><br>
+    <h2>Produtos</h2>
+    <div id="items"></div>
+    <button type="button" onclick="addItem()">Adicionar Produto</button><br><br>
+    <button type="submit">Gerar XML</button>
+  </form>
+</body>
+</html>
